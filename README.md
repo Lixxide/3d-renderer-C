@@ -12,6 +12,6 @@ and that's it
 
 # Important info
 
-Based on this : https://github.com/ppriyankuu/3d-renderer/tree/main
+Based on this : https://github.com/michalzalobny/3d-renderer-in-c/tree/main
 
 But that code only renders one model, so I'm trying to fix that
