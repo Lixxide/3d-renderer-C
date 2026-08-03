@@ -4,14 +4,6 @@ Issue 1 : Changing models does not work
 
 Issue 2 : Lack of optimisation
 
-# How to run :
-
-you need a "SDL2" folder (one with SDL2/x86_64-w64-mingw32/lib and include) in the root of the project
-
-I cannot upload mine bc github limits to 100 files
-
-and that's it 
-
 # Important info
 
 Based on this : https://github.com/michalzalobny/3d-renderer-in-c/tree/main
