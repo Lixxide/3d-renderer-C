@@ -1,6 +1,8 @@
 Trying to make a 3D game in C → 3D models
 
-Issue : no models are rendered
+Issue 1 : Changing models does not work
+
+Issue 2 : Lack of optimisation
 
 # How to run :
 
