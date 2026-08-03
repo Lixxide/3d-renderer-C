@@ -1,21 +1,30 @@
 #include <stdio.h>
 #include "mesh.h"
 #include "texture.h"
-#include "mesh.h"
-
-int texture_width = 64;
-int texture_height = 64;
 
 void load_png_texture_data(char* filename, mesh_t *m) {
     upng_t *png_texture = upng_new_from_file(filename);
     if (png_texture != NULL) {
         upng_decode(png_texture);
-        if (upng_get_error(png_texture) == UPNG_EOK) {
+        upng_error err = upng_get_error(png_texture);
+        if (err == UPNG_EOK) {
             m->mesh_texture = (uint32_t*)upng_get_buffer(png_texture);
             m->texture_width = upng_get_width(png_texture);
             m->texture_height = upng_get_height(png_texture);
+            m->texture_data = png_texture;
+            SDL_Log("PNG loaded :");
+            SDL_Log(filename);
+        } else {
+            SDL_Log("o shi");
+            if (err == UPNG_EUNINTERLACED) SDL_Log("EUNINTERLACED");
         }
     }
+}
+
+void unload_png_texture_data(mesh_t* mesh)
+{
+    if(mesh->texture_data)
+        upng_free(mesh->texture_data);
 }
 
 tex2_t tex2_clone(tex2_t* t) {

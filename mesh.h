@@ -23,6 +23,8 @@ typedef struct {
   uint32_t texture_width;
   uint32_t texture_height ;
   bool exists;
+
+  upng_t* texture_data;
 } mesh_t;
 
 

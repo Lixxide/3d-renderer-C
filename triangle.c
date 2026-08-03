@@ -1,6 +1,7 @@
 #include "display.h"
 #include "swap.h"
 #include "triangle.h"
+#include "texture.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 // Return the barycentric weights alpha, beta, and gamma for point p
@@ -27,6 +28,8 @@ vec3_t barycentric_weights(vec2_t a, vec2_t b, vec2_t c, vec2_t p) {
 
     // Compute the area of the full parallegram/triangle ABC using 2D cross product
     float area_parallelogram_abc = (ac.x * ab.y - ac.y * ab.x); // || AC x AB ||
+
+    if (area_parallelogram_abc == 0) return (vec3_t){0.25,0.25,0.5}; // random bullshit go
 
     // Alpha is the area of the small parallelogram/triangle PBC divided by the area of the full parallelogram/triangle ABC
     float alpha = (pc.x * pb.y - pc.y * pb.x) / area_parallelogram_abc;
@@ -89,17 +92,24 @@ void draw_triangle_pixel(
 ///////////////////////////////////////////////////////////////////////////////
 // Function to draw the textured pixel at position (x,y) using depth interpolation
 ///////////////////////////////////////////////////////////////////////////////
+
+#define MODEL_TEXTURE_DIMENTION 4096
+
 void draw_triangle_texel(
     int x, int y, uint32_t* texture,
     vec4_t point_a, vec4_t point_b, vec4_t point_c,
     tex2_t a_uv, tex2_t b_uv, tex2_t c_uv
 ) {
+
+    if (!texture) return;
+
     vec2_t p = { x, y };
     vec2_t a = vec2_from_vec4(point_a);
     vec2_t b = vec2_from_vec4(point_b);
     vec2_t c = vec2_from_vec4(point_c);
 
     // Calculate the barycentric coordinates of our point 'p' inside the triangle
+    ///SDL_Log("t107");
     vec3_t weights = barycentric_weights(a, b, c, p);
 
     float alpha = weights.x;
@@ -111,7 +121,12 @@ void draw_triangle_texel(
     float interpolated_v;
     float interpolated_reciprocal_w;
 
+    //SDL_Log("t119");
+
     // Perform the interpolation of all U/w and V/w values using barycentric weights and a factor of 1/w
+
+    if (point_a.w == 0 || point_b.w == 0 || point_c.w == 0) return;
+    
     interpolated_u = (a_uv.u / point_a.w) * alpha + (b_uv.u / point_b.w) * beta + (c_uv.u / point_c.w) * gamma;
     interpolated_v = (a_uv.v / point_a.w) * alpha + (b_uv.v / point_b.w) * beta + (c_uv.v / point_c.w) * gamma;
 
@@ -119,20 +134,29 @@ void draw_triangle_texel(
     interpolated_reciprocal_w = (1 / point_a.w) * alpha + (1 / point_b.w) * beta + (1 / point_c.w) * gamma;
 
     // Now we can divide back both interpolated values by 1/w
+
+    if (interpolated_reciprocal_w == 0) return;
+    
     interpolated_u /= interpolated_reciprocal_w;
     interpolated_v /= interpolated_reciprocal_w;
 
-    // Map the UV coordinate to the full texture width and height
-    int tex_x = abs((int)(interpolated_u * texture_width)) % texture_width;
-    int tex_y = abs((int)(interpolated_v * texture_height)) % texture_height;
+    //SDL_Log("t133");
 
+    // Map the UV coordinate to the full texture width and height
+    int tex_x = abs((int)(interpolated_u * MODEL_TEXTURE_DIMENTION)) % MODEL_TEXTURE_DIMENTION;
+    int tex_y = abs((int)(interpolated_v * MODEL_TEXTURE_DIMENTION)) % MODEL_TEXTURE_DIMENTION;
     // Adjust 1/w so the pixels that are closer to the camera have smaller values
     interpolated_reciprocal_w = 1.0 - interpolated_reciprocal_w;
+
+    //SDL_Log("t141");
+
+    // check for bounds
+    if (y >= window_height || y < 0 || x >= window_width || x < 0 || !texture) return;
 
     // Only draw the pixel if the depth value is less than the one previously stored in the z-buffer
     if (interpolated_reciprocal_w < z_buffer[(window_width * y) + x]) {
         // Draw a pixel at position (x,y) with the color that comes from the mapped texture
-        draw_pixel(x, y, texture[(texture_width * tex_y) + tex_x]);
+        draw_pixel(x, y, texture[(MODEL_TEXTURE_DIMENTION * tex_y) + tex_x]);
 
         // Update the z-buffer value with the 1/w of this current pixel
         z_buffer[(window_width * y) + x] = interpolated_reciprocal_w;
@@ -166,6 +190,9 @@ void draw_textured_triangle(
     uint32_t* texture
 ) {
     // We need to sort the vertices by y-coordinate ascending (y0 < y1 < y2)
+
+    //SDL_Log("t174");
+
     if (y0 > y1) {
         int_swap(&y0, &y1);
         int_swap(&x0, &x1);
@@ -191,6 +218,7 @@ void draw_textured_triangle(
         float_swap(&v0, &v1);
     }
 
+    //SDL_Log("t201");
     // Flip the V component to account for inverted UV-coordinates (V grows downwards)
     v0 = 1.0 - v0;
     v1 = 1.0 - v1;
@@ -210,10 +238,14 @@ void draw_textured_triangle(
     float inv_slope_1 = 0;
     float inv_slope_2 = 0;
 
+    //SDL_Log("t221");
+
     if (y1 - y0 != 0) inv_slope_1 = (float)(x1 - x0) / abs(y1 - y0);
     if (y2 - y0 != 0) inv_slope_2 = (float)(x2 - x0) / abs(y2 - y0);
 
+    //SDL_Log("t243");
     if (y1 - y0 != 0) {
+        
         for (int y = y0; y <= y1; y++) {
             int x_start = x1 + (y - y1) * inv_slope_1;
             int x_end = x0 + (y - y0) * inv_slope_2;
@@ -228,6 +260,7 @@ void draw_textured_triangle(
             }
         }
     }
+    //SDL_Log("t260");
 
     ///////////////////////////////////////////////////////
     // Render the bottom part of the triangle (flat-top)
@@ -237,6 +270,8 @@ void draw_textured_triangle(
 
     if (y2 - y1 != 0) inv_slope_1 = (float)(x2 - x1) / abs(y2 - y1);
     if (y2 - y0 != 0) inv_slope_2 = (float)(x2 - x0) / abs(y2 - y0);
+
+    //SDL_Log("t253");
 
     if (y2 - y1 != 0) {
         for (int y = y1; y <= y2; y++) {
@@ -253,6 +288,7 @@ void draw_textured_triangle(
             }
         }
     }
+    //SDL_Log("t270");
 }
 
 ///////////////////////////////////////////////////////////////////////////////

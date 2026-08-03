@@ -30,7 +30,7 @@ bool initialize_window(void) {
     SDL_WINDOWPOS_CENTERED, // y position 
     window_width, 
     window_height, 
-    SDL_WINDOW_BORDERLESS
+    SDL_WINDOW_SHOWN //SDL_WINDOW_BORDERLESS
   );
 
   if(!window){
@@ -68,16 +68,6 @@ void draw_rect(int start_x, int start_y, int width, int height, uint32_t color){
       draw_pixel(current_x, current_y, color);
     }
   }
-  // Previous code: much much slower (because we go through ALL pixels on screen - not just the one we need):
-  //  for(int y = 0; y < window_height; y++){
-  //   for(int x = 0; x < window_width; x++){
-  //     if(x>= start_x && y>= start_y && x<= (width + start_x) && y<= (height + start_y)){
-  //       // color_buffer[window_width * y + x] = color;
-  //       draw_pixel(x, y, color);
-  //     }
- 
-  //   }
-  // }
 }
 
 void draw_pixel(int x, int y, uint32_t color){

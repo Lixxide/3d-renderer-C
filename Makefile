@@ -17,8 +17,8 @@ SDL_PATH = SDL2/x86_64-w64-mingw32
 # 
 # SDL -L$(SDL_PATH)/lib -lSDL3  -L$(SDLimg_PATH)/lib -lSDL3_image -mwindows
 
-CFLAGS =  -O3 -I$(SDL_PATH)/include/
-LDFLAGS =  -lmingw32 -L$(SDL_PATH)/lib/ -mwindows -lSDL2
+CFLAGS =   -I$(SDL_PATH)/include/ -ggdb
+LDFLAGS =  -lmingw32 -L$(SDL_PATH)/lib/ -mwindows -lSDL2 -ggdb
 
 # Source files and object files
 SRCS = $(wildcard $(SRC)/*.c)

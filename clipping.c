@@ -1,6 +1,8 @@
 #include <math.h>
 #include "clipping.h"
 
+#include "texture.h"
+
 #define NUM_PLANES 6
 plane_t frustum_planes[NUM_PLANES];
 
@@ -27,10 +29,10 @@ plane_t frustum_planes[NUM_PLANES];
 //
 ///////////////////////////////////////////////////////////////////////////////
 void init_frustum_planes(float fov_x, float fov_y, float z_near, float z_far) {
-	float cos_half_fov_x = cos(fov_x / 2);
-	float sin_half_fov_x = sin(fov_x / 2);
-	float cos_half_fov_y = cos(fov_y / 2);
-	float sin_half_fov_y = sin(fov_y / 2);
+	float cos_half_fov_x = cosf(fov_x / 2);
+	float sin_half_fov_x = sinf(fov_x / 2);
+	float cos_half_fov_y = cosf(fov_y / 2);
+	float sin_half_fov_y = sinf(fov_y / 2);
 
 	frustum_planes[LEFT_FRUSTUM_PLANE].point = vec3_new(0, 0, 0);
 	frustum_planes[LEFT_FRUSTUM_PLANE].normal.x = cos_half_fov_x;
